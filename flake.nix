@@ -14,14 +14,26 @@
       {
         packages.default = pkgs.stdenv.mkDerivation {
           pname = "azure-iot-sdk-c";
-          version = "LTS_03_2025";
+          version = "LTS_10_2026";
 
           src = pkgs.fetchFromGitHub {
             owner = "Azure";
             repo = "azure-iot-sdk-c";
-            rev = "LTS_03_2025";
-            sha256 = "sha256-I7ObUQzgyHdick+24Oy0VHD2PxgCbE/UIUEn08cSJDM=";
-            fetchSubmodules = true;
+            rev = "LTS_10_2026";
+            sha256 = "sha256-pF19uCckNcCLYbe9fiUD6QW+Gy8dSUfK3cIlzijp44U=";
+            # only fetch required submodules
+            fetchSubmodules = false;
+            postCheckout = ''
+              git -C "$out" submodule update --init --depth 1 --jobs "$NIX_BUILD_CORES" -- \
+                c-utility \
+                deps/azure-macro-utils-c \
+                deps/c-build-tools \
+                deps/c-logging \
+                deps/parson \
+                deps/umock-c \
+                provisioning_client/deps/utpm \
+                umqtt
+            '';
           };
 
           nativeBuildInputs = with pkgs; [
@@ -48,10 +60,6 @@
             "-Dbuild_service_client:BOOL=OFF"
             "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
           ];
-
-          preConfigure = ''
-            git submodule update --init || true
-          '';
 
           postInstall = ''
             mkdir -p $out/lib/pkgconfig
